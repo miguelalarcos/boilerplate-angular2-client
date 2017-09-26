@@ -62,7 +62,6 @@ class DateHandler(JSONHandler):
 class LoginHandler(JSONHandler):
     @gen.coroutine    
     def get(self, token):
-        token = 'ya29.GlzSBDv-yg-rakd7qsH_hr9a_MNge3KQxrvY_mAhCFhGqHIVSnTMSJu3hrBrJT4M_Rx6AzT0rhf4GmLxWT54kVrbPIihqkeZfK5lr5ictQCi_tMawKUYYuSV4fpsew'
         url = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + token
         request = HTTPRequest(url=url, method="GET")
         response = yield AsyncHTTPClient().fetch(request)
