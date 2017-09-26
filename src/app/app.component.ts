@@ -35,6 +35,7 @@ export class AppComponent {
     this.store.take(1).subscribe((st) => token = st.user.jwt);
     
     const headers = new Headers({ 'Authorization': 'Bearer ' + token});
-    this.http.get('http://localhost:8889/protected', {headers}).map((response: Response) => response.json()).subscribe((x)=>console.log(x));
+    //this.http.get('http://localhost:8889/protected', {headers}).map((response: Response) => response.json()).subscribe((x)=>console.log(x));
+    this.http.get('/protected', {headers}).map((response: Response) => response.json()).subscribe((x)=>console.log(x));
   }
 }

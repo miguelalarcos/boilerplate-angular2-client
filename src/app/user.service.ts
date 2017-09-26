@@ -21,7 +21,8 @@ export class UserService {
       googleAuth.signIn({scope: 'profile email'}).then(googleUser => {
         //cb(googleUser.getAuthResponse().access_token);
         let token = googleUser.getAuthResponse().access_token;
-        this.http.get('http://localhost:8889/login?token=' + token)
+        //this.http.get('http://localhost:8889/login?token=' + token)
+        this.http.get('/login/' + token)
         .map((res: Response) => {
               let body = res.json();
               return body || {};
