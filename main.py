@@ -13,10 +13,10 @@ def has_role(role):
                 auth = self.request.headers.get('Authorization', None)
                 token = auth.split()[1]
                 payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-                if payload['rol'] == role:
+                if payload['role'] == role:
                     return f(self, *args)
                 else:
-                    raise Exception('no tiene rol ', role)
+                    raise Exception('not role ', role)
             except Exception as e:
                 self.send_error(401, msg='my error')
         return helper
@@ -57,7 +57,6 @@ class DateHandler(JSONHandler):
     @types(int, date)
     def get(self, year, d):
         self.rjson({'year': year, 'd': d})
-        #return {'year': year, 'd': d} 
 
 class LoginHandler(JSONHandler):
     @gen.coroutine    
@@ -68,9 +67,7 @@ class LoginHandler(JSONHandler):
         
         if response.code == 200:
             data = json.loads(str(response.body, 'utf-8'))
-            jwt_ = jwt.encode({'rol': 'admin', 'email': data['email']}, 'secret', algorithm='HS256')
-            print(jwt_)
-            #return {'jwt': jwt_}
+            jwt_ = jwt.encode({'role': 'admin', 'email': data['email']}, 'secret', algorithm='HS256')
             self.rjson({'jwt': jwt_.decode("utf-8")})
         else:
             self.send_error(401, msg='my error')     
@@ -86,7 +83,6 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
 
 if __name__ == "__main__":
     print('init')
-    print(jwt.encode({'rol': 'admin'}, 'secret', algorithm='HS256'))
     application = tornado.web.Application([
         (r'/', MainHandler),
         (r"/login/(.+)", LoginHandler),
