@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+from tornado import gen
 import json
 from datetime import datetime
 import jwt
@@ -12,7 +13,7 @@ def has_role(role):
                 auth = self.request.headers.get('Authorization', None)
                 token = auth.split()[1]
                 payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-                if payload['rol'] == '':
+                if payload['rol'] == role:
                     return f(self, *args)
                 else:
                     raise Exception('no tiene rol ', role)
@@ -31,13 +32,6 @@ def json_dumps_helper(doc):
 def date(arg):
     return datetime.strptime(arg, '%d-%m-%Y')
 
-def rjson(f):
-    def helper(self, *args):
-        self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(f(self, *args), default=json_dumps_helper))
-        self.finish()
-    return helper
-
 def types(*ts):
     def decorator(f):
         def helper(self, *args):
@@ -51,27 +45,34 @@ def types(*ts):
         return helper
     return decorator
 
-class DateHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
+class JSONHandler(tornado.web.RequestHandler):
+    def rjson(self, ret):
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(ret, default=json_dumps_helper))
+        self.finish()
+
+class DateHandler(JSONHandler):
+    @gen.coroutine    
     @has_role('admin')
     @types(int, date)
-    @rjson
-    def get(self, year, d):        
-        return {'year': year, 'd': d}    
+    def get(self, year, d):
+        self.rjson({'year': year, 'd': d})
+        #return {'year': year, 'd': d} 
 
-class LoginHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
-    @types(str)
-    @rjson
+class LoginHandler(JSONHandler):
+    @gen.coroutine    
     def get(self, token):
+        token = 'ya29.GlzSBDv-yg-rakd7qsH_hr9a_MNge3KQxrvY_mAhCFhGqHIVSnTMSJu3hrBrJT4M_Rx6AzT0rhf4GmLxWT54kVrbPIihqkeZfK5lr5ictQCi_tMawKUYYuSV4fpsew'
         url = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + token
         request = HTTPRequest(url=url, method="GET")
         response = yield AsyncHTTPClient().fetch(request)
-
+        
         if response.code == 200:
             data = json.loads(str(response.body, 'utf-8'))
             jwt_ = jwt.encode({'rol': 'admin', 'email': data['email']}, 'secret', algorithm='HS256')
-            return {'jwt': jwt_}
+            print(jwt_)
+            #return {'jwt': jwt_}
+            self.rjson({'jwt': jwt_.decode("utf-8")})
         else:
             self.send_error(401, msg='my error')     
 
