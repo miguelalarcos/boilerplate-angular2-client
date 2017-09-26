@@ -51,6 +51,12 @@ class JSONHandler(tornado.web.RequestHandler):
         self.write(json.dumps(ret, default=json_dumps_helper))
         self.finish()
 
+class ProtecedHandler(JSONHandler):
+    @gen.coroutine    
+    @has_role('admin')
+    def get(self):
+        self.rjson({'msg': 'you have access'})
+
 class DateHandler(JSONHandler):
     @gen.coroutine    
     @has_role('admin')
@@ -85,6 +91,7 @@ if __name__ == "__main__":
     print('init')
     application = tornado.web.Application([
         (r'/', MainHandler),
+        (r'/protected', ProtecedHandler),
         (r"/login/(.+)", LoginHandler),
         (r"/(\d{4})/(\d\d-\d\d-\d\d\d\d)", DateHandler),
         (r'/(.*)', NoCacheStaticFileHandler, {'path': './dist'}),
